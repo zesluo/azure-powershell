@@ -90,7 +90,7 @@ RequiredModules = @(@{ModuleName = 'Az.Accounts'; ModuleVersion = '1.9.1'; },
                @{ModuleName = 'Az.MarketplaceOrdering'; RequiredVersion = '1.0.2'; }, 
                @{ModuleName = 'Az.Media'; RequiredVersion = '1.1.1'; }, 
                @{ModuleName = 'Az.Monitor'; RequiredVersion = '2.0.2'; }, 
-               @{ModuleName = 'Az.Network'; RequiredVersion = '3.2.0'; }, 
+#               @{ModuleName = 'Az.Network'; RequiredVersion = '3.2.0'; }, # for preview 
                @{ModuleName = 'Az.NotificationHubs'; RequiredVersion = '1.1.1'; }, 
                @{ModuleName = 'Az.OperationalInsights'; RequiredVersion = '2.2.0'; }, 
                @{ModuleName = 'Az.PolicyInsights'; RequiredVersion = '1.3.1'; }, 
