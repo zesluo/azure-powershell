@@ -350,7 +350,7 @@ Accept wildcard characters: False
 ```
 
 ### -HostGroupId
-Specifies the dedicated host group that the virtual machine resides in.
+Specifies the dedicated host group the virtual machine will reside in.
 
 ```yaml
 Type: System.String
