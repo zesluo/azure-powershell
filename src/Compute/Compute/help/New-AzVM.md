@@ -350,7 +350,7 @@ Accept wildcard characters: False
 ```
 
 ### -HostGroupId
-The resource id of the dedicated host group, on which the customer wants their VM placed using automatic placement.
+Specifies the dedicated host group that the virtual machine resides in.
 
 ```yaml
 Type: System.String
