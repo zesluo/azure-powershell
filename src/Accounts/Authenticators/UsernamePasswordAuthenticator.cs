@@ -13,14 +13,18 @@
 // ----------------------------------------------------------------------------------
 
 using System;
-using System.IO;
-using System.Security;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Azure.Core;
+using Azure.Identity;
+
 using Hyak.Common;
+
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
-using Microsoft.Identity.Client;
+using Microsoft.WindowsAzure.Commands.Common;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
 {
@@ -29,6 +33,8 @@ namespace Microsoft.Azure.PowerShell.Authenticators
     /// </summary>
     public class UsernamePasswordAuthenticator : DelegatingAuthenticator
     {
+        private ConcurrentDictionary<string, UsernamePasswordCredential> UserCredentialMap = new ConcurrentDictionary<string, UsernamePasswordCredential>(StringComparer.OrdinalIgnoreCase);
+
         public override Task<IAccessToken> Authenticate(AuthenticationParameters parameters, CancellationToken cancellationToken)
         {
             var upParameters = parameters as UsernamePasswordParameters;
@@ -40,12 +46,28 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             var authority = onPremise ?
                                 upParameters.Environment.ActiveDirectoryAuthority :
                                 AuthenticationHelpers.GetAuthority(parameters.Environment, parameters.TenantId);
-            TracingAdapter.Information(string.Format("[UsernamePasswordAuthenticator] Creating IPublicClientApplication - ClientId: '{0}', Authority: '{1}', UseAdfs: '{2}'", clientId, authority, onPremise));
-            var publicClient = authenticationClientFactory.CreatePublicClient(clientId: clientId, authority: authority, useAdfs: onPremise);
-            TracingAdapter.Information(string.Format("[UsernamePasswordAuthenticator] Calling AcquireTokenByUsernamePassword - Scopes: '{0}', UserId: '{1}'", string.Join(",", scopes), upParameters.UserId));
-            var response = publicClient.AcquireTokenByUsernamePassword(scopes, upParameters.UserId, upParameters.Password).ExecuteAsync(cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            return AuthenticationResultToken.GetAccessTokenAsync(response);
+
+            var requestContext = new TokenRequestContext(scopes);
+            UsernamePasswordCredential passwordCredential;
+            Action action = EmptyAction;
+            if (!UserCredentialMap.TryGetValue(upParameters.UserId, out passwordCredential))
+            {
+                passwordCredential = new UsernamePasswordCredential(upParameters.UserId, upParameters.Password.ConvertToString(), upParameters.TenantId, clientId);
+                action = () => UserCredentialMap[upParameters.UserId] = passwordCredential;
+            }
+            var tokenTask = passwordCredential.GetTokenAsync(requestContext, cancellationToken);
+            return MsalAccessToken.GetAccessTokenAsync(
+                tokenTask,
+                action,
+                upParameters.TenantId,
+                upParameters.UserId);
+
+            //TracingAdapter.Information(string.Format("[UsernamePasswordAuthenticator] Creating IPublicClientApplication - ClientId: '{0}', Authority: '{1}', UseAdfs: '{2}'", clientId, authority, onPremise));
+            //var publicClient = authenticationClientFactory.CreatePublicClient(clientId: clientId, authority: authority, useAdfs: onPremise);
+            //TracingAdapter.Information(string.Format("[UsernamePasswordAuthenticator] Calling AcquireTokenByUsernamePassword - Scopes: '{0}', UserId: '{1}'", string.Join(",", scopes), upParameters.UserId));
+            //var response = publicClient.AcquireTokenByUsernamePassword(scopes, upParameters.UserId, upParameters.Password).ExecuteAsync(cancellationToken);
+            //cancellationToken.ThrowIfCancellationRequested();
+            //return AuthenticationResultToken.GetAccessTokenAsync(response);
         }
 
         public override bool CanAuthenticate(AuthenticationParameters parameters)

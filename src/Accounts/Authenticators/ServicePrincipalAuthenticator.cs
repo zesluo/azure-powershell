@@ -12,18 +12,34 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Hyak.Common;
+
+using Azure.Core;
+using Azure.Identity;
+
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Identity.Client;
+using Microsoft.WindowsAzure.Commands.Common;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
 {
     public class ServicePrincipalAuthenticator : DelegatingAuthenticator
     {
-        private const string _authenticationFailedMessage = "No certificate thumbprint or secret provided for the given service principal '{0}'.";
+        private bool EnablePersistenceCache { get; set; }
+
+        private ConcurrentDictionary<string, ClientSecretCredential> ClientSecretCredentialMap = new ConcurrentDictionary<string, ClientSecretCredential>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, ClientCertificateCredential> ClientCertCredentialMap = new ConcurrentDictionary<string, ClientCertificateCredential>(StringComparer.OrdinalIgnoreCase);
+
+        private const string AuthenticationFailedMessage = "No certificate thumbprint or secret provided for the given service principal '{0}'.";
+        
+        public ServicePrincipalAuthenticator(bool enablePersistentCache = true)
+        {
+            EnablePersistenceCache = enablePersistentCache;
+        }
 
         public override Task<IAccessToken> Authenticate(AuthenticationParameters parameters, CancellationToken cancellationToken)
         {
@@ -37,27 +53,61 @@ namespace Microsoft.Azure.PowerShell.Authenticators
                                 spParameters.Environment.ActiveDirectoryAuthority :
                                 AuthenticationHelpers.GetAuthority(spParameters.Environment, spParameters.TenantId);
             var redirectUri = spParameters.Environment.ActiveDirectoryServiceEndpointResourceId;
-            IConfidentialClientApplication confidentialClient = null;
+
+            var requestContext = new TokenRequestContext(scopes);
+
             if (!string.IsNullOrEmpty(spParameters.Thumbprint))
             {
-                var certificate = AzureSession.Instance.DataStore.GetCertificate(spParameters.Thumbprint);
-                TracingAdapter.Information(string.Format("[ServicePrincipalAuthenticator] Creating IConfidentialClientApplication with certificate - ClientId: '{0}', Authority: '{1}', RedirectUri: '{2}', Thumbprint: '{3}', UseAdfs: '{4}'", clientId, authority, redirectUri, spParameters.Thumbprint, onPremise));
-                confidentialClient = authenticationClientFactory.CreateConfidentialClient(clientId: clientId, authority: authority, redirectUri: redirectUri, certificate: certificate, useAdfs: onPremise);
+                var options = new ClientCertificateCredentialOptions()
+                {
+                    EnablePersistentCache = EnablePersistenceCache,
+                    AllowUnencryptedCache = true
+                };
+                ClientCertificateCredential certCredential;
+                if (!ClientCertCredentialMap.TryGetValue(spParameters.ApplicationId, out certCredential))
+                {
+                    //first time login
+                    var certificate = AzureSession.Instance.DataStore.GetCertificate(spParameters.Thumbprint);
+                    certCredential = new ClientCertificateCredential(spParameters.TenantId, spParameters.ApplicationId, certificate, options);
+                    var tokenTask = certCredential.GetTokenAsync(requestContext, cancellationToken);
+                    return MsalAccessToken.GetAccessTokenAsync(tokenTask,
+                        () => { ClientCertCredentialMap[spParameters.ApplicationId] = certCredential; },
+                        spParameters.TenantId,
+                        spParameters.ApplicationId);
+                }
+                else
+                {
+                    var tokenTask = certCredential.GetTokenAsync(requestContext, cancellationToken);
+                    return MsalAccessToken.GetAccessTokenAsync(tokenTask, spParameters.TenantId, spParameters.ApplicationId);
+                }
             }
             else if (spParameters.Secret != null)
             {
-                TracingAdapter.Information(string.Format("[ServicePrincipalAuthenticator] Creating IConfidentialClientApplication with secret - ClientId: '{0}', Authority: '{1}', RedirectUri: '{2}', UseAdfs: '{3}'", clientId, authority, redirectUri, onPremise));
-                confidentialClient = authenticationClientFactory.CreateConfidentialClient(clientId: clientId, authority: authority, redirectUri: redirectUri, clientSecret: spParameters.Secret, useAdfs: onPremise);
+                var options = new ClientSecretCredentialOptions()
+                {
+                    EnablePersistentCache = EnablePersistenceCache,
+                    AllowUnencryptedCache = true
+                };
+                ClientSecretCredential secretCredential;
+                //TODO: what if change password? Key = ClientId + Hash(Password)
+                if (!ClientSecretCredentialMap.TryGetValue(spParameters.ApplicationId, out secretCredential))
+                {
+                    //first time login
+                    secretCredential = new ClientSecretCredential(spParameters.TenantId, spParameters.ApplicationId, spParameters.Secret.ConvertToString(), options);
+                    var tokenTask = secretCredential.GetTokenAsync(requestContext, cancellationToken);
+                    return MsalAccessToken.GetAccessTokenAsync(tokenTask,
+                        () => { ClientSecretCredentialMap[spParameters.ApplicationId] = secretCredential; },
+                        spParameters.TenantId,
+                        spParameters.ApplicationId);
+                }
+                else
+                {
+                    var tokenTask = secretCredential.GetTokenAsync(requestContext, cancellationToken);
+                    return MsalAccessToken.GetAccessTokenAsync(tokenTask, spParameters.TenantId, spParameters.ApplicationId);
+                }
             }
             else
-            {
-                throw new MsalException(MsalError.AuthenticationFailed, string.Format(_authenticationFailedMessage, clientId));
-            }
-
-            TracingAdapter.Information(string.Format("[ServicePrincipalAuthenticator] Calling AcquireTokenForClient - Scopes: '{0}'", string.Join(",", scopes)));
-            var response = confidentialClient.AcquireTokenForClient(scopes).ExecuteAsync(cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            return AuthenticationResultToken.GetAccessTokenAsync(response, userId: clientId, tenantId: spParameters.TenantId);
+                throw new MsalException(MsalError.AuthenticationFailed, string.Format(AuthenticationFailedMessage, clientId));
         }
 
         public override bool CanAuthenticate(AuthenticationParameters parameters)

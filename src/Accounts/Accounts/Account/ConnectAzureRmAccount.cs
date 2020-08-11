@@ -472,14 +472,16 @@ namespace Microsoft.Azure.Commands.Profile
                 }
 
                 bool shouldModifyContext = false;
+                //bool tokenFallbackAsPlainText = false;
                 if (autoSaveEnabled && !SharedTokenCacheClientFactory.SupportCachePersistence(out string message))
                 {
-                    // If token cache persistence is not supported, fall back to in-memory, and print a warning
+                    // If token cache persistence is not supported, fall back to plain text persistence, and print a warning
                     // We cannot just throw an exception here because this is called when importing the module
-                    autoSaveEnabled = false;
+                    // autoSaveEnabled = false;
+                    //tokenFallbackAsPlainText = true;
                     WriteInitializationWarnings(Resources.AutosaveNotSupportedWithFallback);
                     WriteInitializationWarnings(message);
-                    shouldModifyContext = true;
+                    //shouldModifyContext = true;
                 }
 
                 InitializeProfileProvider(autoSaveEnabled);
@@ -508,7 +510,7 @@ namespace Microsoft.Azure.Commands.Profile
                 IAuthenticatorBuilder builder = null;
                 if (!AzureSession.Instance.TryGetComponent(AuthenticatorBuilder.AuthenticatorBuilderKey, out builder))
                 {
-                    builder = new DefaultAuthenticatorBuilder();
+                    builder = new DefaultAuthenticatorBuilder(autoSaveEnabled);
                     AzureSession.Instance.RegisterComponent(AuthenticatorBuilder.AuthenticatorBuilderKey, () => builder);
                 }
 

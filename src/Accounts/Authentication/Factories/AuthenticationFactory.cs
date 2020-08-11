@@ -12,17 +12,18 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Hyak.Common;
-using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
-using Microsoft.Identity.Client;
-using Microsoft.Rest;
 using System;
 using System.Linq;
 using System.Security;
-using Microsoft.Azure.Commands.Common.Authentication.Properties;
 using System.Threading.Tasks;
+
+using Hyak.Common;
+
+using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
-using System.Security.Authentication;
+using Microsoft.Azure.Commands.Common.Authentication.Properties;
+using Microsoft.Identity.Client;
+using Microsoft.Rest;
 
 namespace Microsoft.Azure.Commands.Common.Authentication.Factories
 {
@@ -129,6 +130,10 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Factories
                         {
                             // token.UserId is null when getting tenant token in ADFS environment
                             account.Id = token.UserId ?? account.Id;
+                            if(!string.IsNullOrEmpty(token.HomeAccountId))
+                            {
+                                account.SetProperty(AzureAccount.Property.HomeAccountId, token.HomeAccountId);
+                            }
                             break;
                         }
 
@@ -455,7 +460,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Factories
                 ResourceClientUri = audience,
                 AdDomain = tenantId,
                 ValidateAuthority = !environment.OnPremise,
-                TokenCache = tokenCache
+                //TokenCache = tokenCache
             };
         }
 
@@ -527,16 +532,18 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Factories
                 case AzureAccount.AccountType.User:
                     if (password == null)
                     {
-                        if (!string.IsNullOrEmpty(account.Id))
+                        var homeAccountId = account.GetProperty("HomeAccountId");
+                        //if (!string.IsNullOrEmpty(account.Id))
+                        //{
+                        //    return new SilentParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id);
+                        //}
+                        //else 
+                        if (account.IsPropertySet("UseDeviceAuth"))
                         {
-                            return new SilentParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id);
-                        }
-                        else if (account.IsPropertySet("UseDeviceAuth"))
-                        {
-                            return new DeviceCodeParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId);
+                            return new DeviceCodeParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, homeAccountId);
                         }
 
-                        return new InteractiveParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, promptAction);
+                        return new InteractiveParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, homeAccountId, promptAction);
                     }
 
                     return new UsernamePasswordParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, password);

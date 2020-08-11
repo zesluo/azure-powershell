@@ -26,6 +26,8 @@ using System.Net;
 using System.IO;
 using Microsoft.Identity.Client.Extensibility;
 using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Microsoft.Azure.Commands.Common.Authentication
 {
@@ -273,6 +275,10 @@ namespace Microsoft.Azure.Commands.Common.Authentication
             public string UserId { get { return AuthResult.Account.Username; } }
 
             public string TenantId { get { return AuthResult.TenantId; } }
+
+            public string HomeAccountId => null;
+
+            public IDictionary<string, string> ExtendedProperties { get; } = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             public string LoginType
             {

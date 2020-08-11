@@ -28,6 +28,8 @@ namespace Microsoft.Azure.Commands.Common.Authentication
     /// </summary>
     public abstract class DelegatingAuthenticator : IAuthenticator
     {
+        protected Action EmptyAction = () => { };
+
         public IAuthenticator Next { get; set; }
         public abstract bool CanAuthenticate(AuthenticationParameters parameters);
         public abstract Task<IAccessToken> Authenticate(AuthenticationParameters parameters, CancellationToken cancellationToken);

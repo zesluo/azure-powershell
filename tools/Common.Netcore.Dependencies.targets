@@ -3,6 +3,7 @@
   <ItemGroup >
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.20"/>
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19"/>
+    <!--
     <PackageReference Include="Microsoft.Azure.PowerShell.Clients.Aks" Version="1.0.46-preview"/>
     <PackageReference Include="Microsoft.Azure.PowerShell.Authentication.Abstractions" Version="1.0.46-preview"/>
     <PackageReference Include="Microsoft.Azure.PowerShell.Clients.Authorization" Version="1.0.46-preview"/>
@@ -18,6 +19,11 @@
     <PackageReference Include="Microsoft.Azure.PowerShell.Clients.Storage.Management" Version="1.0.46-preview"/>
     <PackageReference Include="Microsoft.Azure.PowerShell.Strategies" Version="1.0.46-preview"/>
     <PackageReference Include="Microsoft.Azure.PowerShell.Clients.Websites" Version="1.0.46-preview"/>
+    -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\azure-powershell-common\src\Authentication.Abstractions\Authentication.Abstractions.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\azure-powershell-common\src\Common\Common.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\azure-powershell-common\src\ResourceManager\ResourceManager.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\azure-powershell-common\src\Websites\Websites.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0">

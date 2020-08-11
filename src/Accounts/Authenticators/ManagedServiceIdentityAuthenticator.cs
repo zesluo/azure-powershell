@@ -15,7 +15,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Azure.Core;
+using Azure.Identity;
+
 using Hyak.Common;
+
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 
@@ -28,14 +33,17 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             DefaultMSILoginUri = "http://169.254.169.254/metadata/identity/oauth2/token",
             DefaultBackupMSILoginUri = "http://localhost:50342/oauth2/token";
 
+
         public override Task<IAccessToken> Authenticate(AuthenticationParameters parameters, CancellationToken cancellationToken)
         {
             var msiParameters = parameters as ManagedServiceIdentityParameters;
-            return Task.Run(() => GetManagedServiceToken(msiParameters.Account,
-                                                         msiParameters.Environment,
-                                                         msiParameters.TenantId,
-                                                         msiParameters.ResourceId),
-                                                         cancellationToken);
+
+            var requestContext = new TokenRequestContext()
+            {
+            };
+            ManagedIdentityCredential identityCredential = new ManagedIdentityCredential(msiParameters.Account.Id);
+            var tokenTask = identityCredential.GetTokenAsync(requestContext);
+            return MsalAccessToken.GetAccessTokenAsync(tokenTask, EmptyAction, null, msiParameters.Account.Id);
         }
 
         public override bool CanAuthenticate(AuthenticationParameters parameters)

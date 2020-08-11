@@ -12,9 +12,14 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using Azure.Core;
+using Azure.Identity;
+
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Identity.Client;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
@@ -32,6 +37,10 @@ namespace Microsoft.Azure.PowerShell.Authenticators
         public string TenantId { get; }
 
         public string LoginType => "User";
+
+        public string HomeAccountId { get; set; }
+
+        public IDictionary<string, string> ExtendedProperties => throw new NotImplementedException();
 
         public AuthenticationResultToken(AuthenticationResult result)
         {
@@ -73,6 +82,64 @@ namespace Microsoft.Azure.PowerShell.Authenticators
         public static IAccessToken GetAccessToken(AuthenticationResult result, string userId = null, string tenantId = null)
         {
             return new AuthenticationResultToken(result, userId, tenantId);
+        }
+    }
+
+    public class MsalAccessToken : IAccessToken
+    {
+        public string AccessToken { get; }
+
+        public string UserId { get; }
+
+        public string TenantId { get; }
+
+        public string LoginType => "User";
+
+        public string HomeAccountId { get; }
+
+        public IDictionary<string, string> ExtendedProperties { get; } = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public MsalAccessToken(string token, string tenantId, string userId = null, string homeAccountId = null)
+        {
+            AccessToken = token;
+            UserId = userId;
+            TenantId = tenantId;
+            HomeAccountId = homeAccountId;
+        }
+
+        public void AuthorizeRequest(Action<string, string> authTokenSetter)
+        {
+            //var header = _result.CreateAuthorizationHeader();
+            authTokenSetter("Bearer", AccessToken);
+        }
+
+        public static async Task<IAccessToken> GetAccessTokenAsync(
+            ValueTask<AccessToken> result,
+            string tenantId = null, string userId = null)
+        {
+            var token = await result;
+            return new MsalAccessToken(token.Token, tenantId, userId);
+        }
+
+        public static async Task<IAccessToken> GetAccessTokenAsync(
+            ValueTask<AccessToken> result,
+            Action action,
+            string tenantId = null, string userId = null)
+        {
+            var token = await result;
+            action();
+            return new MsalAccessToken(token.Token, tenantId, userId);
+        }
+
+        public static async Task<IAccessToken> GetAccessTokenAsync(
+                Task<AuthenticationRecord> authTask,
+                Func<ValueTask<AccessToken>> getTokenAction,
+                Action<AuthenticationRecord> setRecord)
+        {
+            var record = await authTask;
+            setRecord(record);
+            var token = await getTokenAction();
+            return new MsalAccessToken(token.Token, record.TenantId, record.Username, record.HomeAccountId);
         }
     }
 }

@@ -240,6 +240,10 @@ namespace Microsoft.Azure.Commands.Common.Authentication
             }
 
             public DateTimeOffset ExpiresOn { get { return AuthResult.ExpiresOn; } }
+
+            public string HomeAccountId { get { return AuthResult.Account?.HomeAccountId?.ObjectId; } }
+
+            public IDictionary<string, string> ExtendedProperties => throw new NotImplementedException();
         }
     }
 }

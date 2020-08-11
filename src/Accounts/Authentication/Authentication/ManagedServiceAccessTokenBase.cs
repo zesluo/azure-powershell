@@ -103,7 +103,13 @@ namespace Microsoft.Azure.Commands.Common.Authentication
 
         public string UserId => Account.Id;
 
+        //public string HomeAccountId => Account.GetProperty(AzureAccount.Property.HomeAccountId);
+
         public DateTimeOffset ExpiresOn => Expiration;
+
+        public string HomeAccountId => throw new NotImplementedException();
+
+        public IDictionary<string, string> ExtendedProperties => throw new NotImplementedException();
 
         public void AuthorizeRequest(Action<string, string> authTokenSetter)
         {

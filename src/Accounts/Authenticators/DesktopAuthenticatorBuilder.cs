@@ -15,29 +15,29 @@ using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
 {
-    public class DesktopAuthenticatorBuilder : IAuthenticatorBuilder
-    {
-        public DesktopAuthenticatorBuilder()
-        {
-            AppendAuthenticator(() => { return new InteractiveUserAuthenticator(); });
-            var defaultBuilder = new DefaultAuthenticatorBuilder();
-            AppendAuthenticator(() => { return defaultBuilder.Authenticator; });
-        }
+    //public class DesktopAuthenticatorBuilder : IAuthenticatorBuilder
+    //{
+    //    public DesktopAuthenticatorBuilder()
+    //    {
+    //        AppendAuthenticator(() => { return new InteractiveUserAuthenticator(); });
+    //        var defaultBuilder = new DefaultAuthenticatorBuilder();
+    //        AppendAuthenticator(() => { return defaultBuilder.Authenticator; });
+    //    }
 
-        public IAuthenticator Authenticator { get; set; }
+    //    public IAuthenticator Authenticator { get; set; }
 
-        public bool AppendAuthenticator(Func<IAuthenticator> constructor)
-        {
-            if (null == Authenticator)
-            {
-                Authenticator = constructor();
-                return true;
-            }
+    //    public bool AppendAuthenticator(Func<IAuthenticator> constructor)
+    //    {
+    //        if (null == Authenticator)
+    //        {
+    //            Authenticator = constructor();
+    //            return true;
+    //        }
 
-            IAuthenticator current;
-            for (current = Authenticator; current != null && current.Next != null; current = current.Next);
-            current.Next = constructor();
-            return true;
-        }
-    }
+    //        IAuthenticator current;
+    //        for (current = Authenticator; current != null && current.Next != null; current = current.Next);
+    //        current.Next = constructor();
+    //        return true;
+    //    }
+    //}
 }
