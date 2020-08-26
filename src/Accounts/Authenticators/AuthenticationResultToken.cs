@@ -115,16 +115,19 @@ namespace Microsoft.Azure.PowerShell.Authenticators
 
         public static async Task<IAccessToken> GetAccessTokenAsync(
             ValueTask<AccessToken> result,
-            string tenantId = null, string userId = null)
+            string tenantId = null,
+            string userId = null,
+            string homeAccountId = "")
         {
             var token = await result;
-            return new MsalAccessToken(token.Token, tenantId, userId);
+            return new MsalAccessToken(token.Token, tenantId, userId, homeAccountId);
         }
 
         public static async Task<IAccessToken> GetAccessTokenAsync(
             ValueTask<AccessToken> result,
             Action action,
-            string tenantId = null, string userId = null)
+            string tenantId = null,
+            string userId = null)
         {
             var token = await result;
             action();

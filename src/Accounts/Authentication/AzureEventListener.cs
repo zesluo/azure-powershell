@@ -12,33 +12,30 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using System;
+using System.Diagnostics.Tracing;
+
+using Azure.Core.Diagnostics;
+
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
-using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
-using System.Security;
 
 namespace Microsoft.Azure.Commands.Common.Authentication
 {
-    public class UsernamePasswordParameters : AuthenticationParameters
+    public class AzureEventListener : IAzureEventListener
     {
-        public string UserId { get; set; }
+        private AzureEventSourceListener AzureEventSourceListener { get; set; }
 
-        public SecureString Password { get; set; }
-
-        public string HomeAccountId { get; set; }
-
-        public UsernamePasswordParameters(
-            AuthenticationClientFactory authenticationClientFactory,
-            IAzureEnvironment environment,
-            IAzureTokenCache tokenCache,
-            string tenantId,
-            string resourceId,
-            string userId,
-            SecureString password,
-            string homeAccountId) : base(authenticationClientFactory, environment, tokenCache, tenantId, resourceId)
+        public AzureEventListener(Action<string> action)
         {
-            UserId = userId;
-            Password = password;
-            HomeAccountId = homeAccountId;
+            AzureEventSourceListener = new AzureEventSourceListener(
+                (args, message) => action(message), 
+                EventLevel.Informational);
+        }
+
+        public void Dispose()
+        {
+            AzureEventSourceListener.Dispose();
+            AzureEventSourceListener = null;
         }
     }
 }

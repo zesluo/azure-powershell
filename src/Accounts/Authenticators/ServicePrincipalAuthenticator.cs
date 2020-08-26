@@ -31,11 +31,12 @@ namespace Microsoft.Azure.PowerShell.Authenticators
     {
         private bool EnablePersistenceCache { get; set; }
 
-        private ConcurrentDictionary<string, ClientSecretCredential> ClientSecretCredentialMap = new ConcurrentDictionary<string, ClientSecretCredential>(StringComparer.OrdinalIgnoreCase);
+        //private ConcurrentDictionary<string, ClientSecretCredential> ClientSecretCredentialMap = new ConcurrentDictionary<string, ClientSecretCredential>(StringComparer.OrdinalIgnoreCase);
         private ConcurrentDictionary<string, ClientCertificateCredential> ClientCertCredentialMap = new ConcurrentDictionary<string, ClientCertificateCredential>(StringComparer.OrdinalIgnoreCase);
 
         private const string AuthenticationFailedMessage = "No certificate thumbprint or secret provided for the given service principal '{0}'.";
         
+        //MSAL doesn't cache Service Principal into msal.cache
         public ServicePrincipalAuthenticator(bool enablePersistentCache = true)
         {
             EnablePersistenceCache = enablePersistentCache;
@@ -45,6 +46,7 @@ namespace Microsoft.Azure.PowerShell.Authenticators
         {
             var spParameters = parameters as ServicePrincipalParameters;
             var onPremise = spParameters.Environment.OnPremise;
+            var tenantId = onPremise ? AdfsTenant : spParameters.TenantId;
             var authenticationClientFactory = spParameters.AuthenticationClientFactory;
             var resource = spParameters.Environment.GetEndpoint(spParameters.ResourceId) ?? spParameters.ResourceId;
             var scopes = AuthenticationHelpers.GetScope(onPremise, resource);
@@ -56,19 +58,22 @@ namespace Microsoft.Azure.PowerShell.Authenticators
 
             var requestContext = new TokenRequestContext(scopes);
 
+            var options = new ClientCertificateCredentialOptions()
+            {
+                AuthorityHost = new Uri(authority),
+                EnablePersistentCache = EnablePersistenceCache,
+                AllowUnencryptedCache = true
+            };
+
             if (!string.IsNullOrEmpty(spParameters.Thumbprint))
             {
-                var options = new ClientCertificateCredentialOptions()
-                {
-                    EnablePersistentCache = EnablePersistenceCache,
-                    AllowUnencryptedCache = true
-                };
+                //Service Principal with Certificate 
                 ClientCertificateCredential certCredential;
                 if (!ClientCertCredentialMap.TryGetValue(spParameters.ApplicationId, out certCredential))
                 {
                     //first time login
                     var certificate = AzureSession.Instance.DataStore.GetCertificate(spParameters.Thumbprint);
-                    certCredential = new ClientCertificateCredential(spParameters.TenantId, spParameters.ApplicationId, certificate, options);
+                    certCredential = new ClientCertificateCredential(tenantId, spParameters.ApplicationId, certificate, options);
                     var tokenTask = certCredential.GetTokenAsync(requestContext, cancellationToken);
                     return MsalAccessToken.GetAccessTokenAsync(tokenTask,
                         () => { ClientCertCredentialMap[spParameters.ApplicationId] = certCredential; },
@@ -83,28 +88,23 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             }
             else if (spParameters.Secret != null)
             {
-                var options = new ClientSecretCredentialOptions()
-                {
-                    EnablePersistentCache = EnablePersistenceCache,
-                    AllowUnencryptedCache = true
-                };
                 ClientSecretCredential secretCredential;
                 //TODO: what if change password? Key = ClientId + Hash(Password)
-                if (!ClientSecretCredentialMap.TryGetValue(spParameters.ApplicationId, out secretCredential))
+                //if (!ClientSecretCredentialMap.TryGetValue(spParameters.ApplicationId, out secretCredential))
                 {
                     //first time login
-                    secretCredential = new ClientSecretCredential(spParameters.TenantId, spParameters.ApplicationId, spParameters.Secret.ConvertToString(), options);
+                    secretCredential = new ClientSecretCredential(tenantId, spParameters.ApplicationId, spParameters.Secret.ConvertToString(), options);
                     var tokenTask = secretCredential.GetTokenAsync(requestContext, cancellationToken);
                     return MsalAccessToken.GetAccessTokenAsync(tokenTask,
-                        () => { ClientSecretCredentialMap[spParameters.ApplicationId] = secretCredential; },
+                        EmptyAction,
                         spParameters.TenantId,
                         spParameters.ApplicationId);
                 }
-                else
-                {
-                    var tokenTask = secretCredential.GetTokenAsync(requestContext, cancellationToken);
-                    return MsalAccessToken.GetAccessTokenAsync(tokenTask, spParameters.TenantId, spParameters.ApplicationId);
-                }
+                //else
+                //{
+                //    var tokenTask = secretCredential.GetTokenAsync(requestContext, cancellationToken);
+                //    return MsalAccessToken.GetAccessTokenAsync(tokenTask, spParameters.TenantId, spParameters.ApplicationId);
+                //}
             }
             else
                 throw new MsalException(MsalError.AuthenticationFailed, string.Format(AuthenticationFailedMessage, clientId));

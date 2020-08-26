@@ -532,21 +532,26 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Factories
                 case AzureAccount.AccountType.User:
                     if (password == null)
                     {
-                        var homeAccountId = account.GetProperty("HomeAccountId");
-                        //if (!string.IsNullOrEmpty(account.Id))
-                        //{
-                        //    return new SilentParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id);
-                        //}
-                        //else 
+                        var homeAccountId = account.GetProperty(AzureAccount.Property.HomeAccountId) ?? "";
+
+                        if (!string.IsNullOrEmpty(account.Id) && AzureSession.Instance.ARMContextSaveMode == ContextSaveMode.CurrentUser)
+                        {
+                            return new SilentParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, homeAccountId);
+                        }
+
                         if (account.IsPropertySet("UseDeviceAuth"))
                         {
                             return new DeviceCodeParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, homeAccountId);
+                        }
+                        else if(account.IsPropertySet(AzureAccount.Property.UsePasswordAuth))
+                        {
+                            return new UsernamePasswordParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, password, homeAccountId);
                         }
 
                         return new InteractiveParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, homeAccountId, promptAction);
                     }
 
-                    return new UsernamePasswordParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, password);
+                    return new UsernamePasswordParameters(authenticationClientFactory, environment, tokenCache, tenant, resourceId, account.Id, password, null);
                 case AzureAccount.AccountType.Certificate:
                 case AzureAccount.AccountType.ServicePrincipal:
                     password = password ?? ConvertToSecureString(account.GetProperty(AzureAccount.Property.ServicePrincipalSecret));

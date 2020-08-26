@@ -343,4 +343,7 @@
   <data name="AutosaveNotSupportedWithSuggestion" xml:space="preserve">
     <value>Context autosave is not supported on current environment. Please disable it using 'Disable-AzContextSave'.</value>
   </data>
+  <data name="MissingPasswordAndNoCache" xml:space="preserve">
+    <value>Password is missing and no cache found for the current user.</value>
+  </data>
 </root>

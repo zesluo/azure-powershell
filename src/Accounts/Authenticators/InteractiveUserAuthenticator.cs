@@ -56,8 +56,8 @@ namespace Microsoft.Azure.PowerShell.Authenticators
         {
             var interactiveParameters = parameters as InteractiveParameters;
             var onPremise = interactiveParameters.Environment.OnPremise;
+            var tenantId = onPremise ? AdfsTenant : interactiveParameters.TenantId;
             var authenticationClientFactory = interactiveParameters.AuthenticationClientFactory;
-            //IPublicClientApplication publicClient = null;
             var resource = interactiveParameters.Environment.GetEndpoint(interactiveParameters.ResourceId) ?? interactiveParameters.ResourceId;
             var scopes = AuthenticationHelpers.GetScope(onPremise, resource);
             var clientId = AuthenticationHelpers.PowerShellClientId;
@@ -69,11 +69,10 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             {
                 if (!UserCredentialMap.TryGetValue(interactiveParameters.UserId, out browserCredential))
                 {
-                    //MsalPublicApplication 
                     var options = new InteractiveBrowserCredentialOptions()
                     {
                         ClientId = clientId,
-                        TenantId = parameters.TenantId,
+                        TenantId = tenantId,
                         EnablePersistentCache = EnablePersistenceCache,
                         AllowUnencryptedCache = true,
                         AuthenticationRecord = new AuthenticationRecord(
@@ -94,7 +93,7 @@ namespace Microsoft.Azure.PowerShell.Authenticators
                 var options = new InteractiveBrowserCredentialOptions()
                 {
                     ClientId = clientId,
-                    TenantId = parameters.TenantId,
+                    TenantId = tenantId,
                     EnablePersistentCache = EnablePersistenceCache,
                     AllowUnencryptedCache = true,
                 };
@@ -105,67 +104,40 @@ namespace Microsoft.Azure.PowerShell.Authenticators
                     () => browserCredential.GetTokenAsync(requestContext, cancellationToken),
                     (AuthenticationRecord record) => { UserCredentialMap[record.Username] = browserCredential; });
             }
-
-            //try
-            //{
-            //    //var replyUrl = GetReplyUrl(onPremise, interactiveParameters);
-
-            //    //if (!string.IsNullOrEmpty(replyUrl))
-            //    //{
-            //    //    var clientId = AuthenticationHelpers.PowerShellClientId;
-            //    //    var authority = onPremise ?
-            //    //                        interactiveParameters.Environment.ActiveDirectoryAuthority :
-            //    //                        AuthenticationHelpers.GetAuthority(parameters.Environment, parameters.TenantId);
-            //    //    TracingAdapter.Information(string.Format("[InteractiveUserAuthenticator] Creating IPublicClientApplication - ClientId: '{0}', Authority: '{1}', ReplyUrl: '{2}' UseAdfs: '{3}'", clientId, authority, replyUrl, onPremise));
-            //    //    publicClient = authenticationClientFactory.CreatePublicClient(clientId: clientId, authority: authority, redirectUri: replyUrl, useAdfs: onPremise);
-            //    //    TracingAdapter.Information(string.Format("[InteractiveUserAuthenticator] Calling AcquireTokenInteractive - Scopes: '{0}'", string.Join(",", scopes)));
-            //    //    var interactiveResponse = publicClient.AcquireTokenInteractive(scopes)
-            //    //        .WithCustomWebUi(new CustomWebUi())
-            //    //        .ExecuteAsync(cancellationToken);
-            //    //    cancellationToken.ThrowIfCancellationRequested();
-            //    //    return AuthenticationResultToken.GetAccessTokenAsync(interactiveResponse);
-            //    //}
-            //}
-            //catch
-            //{
-            //    interactiveParameters.PromptAction("Unable to authenticate using interactive login. Defaulting back to device code flow.");
-            //}
-
-            //return null;
         }
 
-        private string GetReplyUrl(bool onPremise, InteractiveParameters interactiveParameters)
-        {
-            return string.Format("http://localhost:{0}", GetReplyUrlPort(onPremise, interactiveParameters));
-        }
+        //private string GetReplyUrl(bool onPremise, InteractiveParameters interactiveParameters)
+        //{
+        //    return string.Format("http://localhost:{0}", GetReplyUrlPort(onPremise, interactiveParameters));
+        //}
 
-        private int GetReplyUrlPort(bool onPremise, InteractiveParameters interactiveParameters)
-        {
-            int portStart = onPremise ? AdfsPortStart : AadPortStart;
-            int portEnd = onPremise ? AdfsPortEnd : AadPortEnd;
+        //private int GetReplyUrlPort(bool onPremise, InteractiveParameters interactiveParameters)
+        //{
+        //    int portStart = onPremise ? AdfsPortStart : AadPortStart;
+        //    int portEnd = onPremise ? AdfsPortEnd : AadPortEnd;
 
-            int port = portStart;
-            TcpListener listener = null;
+        //    int port = portStart;
+        //    TcpListener listener = null;
 
-            do
-            {
-                try
-                {
-                    listener = new TcpListener(IPAddress.Loopback, port);
-                    listener.Start();
-                    listener.Stop();
-                    return port;
-                }
-                catch (Exception ex)
-                {
-                    interactiveParameters.PromptAction(string.Format("Port {0} is taken with exception '{1}'; trying to connect to the next port.", port, ex.Message));
-                    listener?.Stop();
-                }
-            }
-            while (++port < portEnd);
+        //    do
+        //    {
+        //        try
+        //        {
+        //            listener = new TcpListener(IPAddress.Loopback, port);
+        //            listener.Start();
+        //            listener.Stop();
+        //            return port;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            interactiveParameters.PromptAction(string.Format("Port {0} is taken with exception '{1}'; trying to connect to the next port.", port, ex.Message));
+        //            listener?.Stop();
+        //        }
+        //    }
+        //    while (++port < portEnd);
 
-            throw new Exception("Cannot find an open port.");
-        }
+        //    throw new Exception("Cannot find an open port.");
+        //}
 
         public override bool CanAuthenticate(AuthenticationParameters parameters)
         {

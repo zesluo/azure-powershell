@@ -28,6 +28,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
     /// </summary>
     public abstract class DelegatingAuthenticator : IAuthenticator
     {
+        protected const string AdfsTenant = "adfs";
         protected Action EmptyAction = () => { };
 
         public IAuthenticator Next { get; set; }

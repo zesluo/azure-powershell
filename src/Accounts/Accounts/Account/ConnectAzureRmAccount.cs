@@ -296,10 +296,10 @@ namespace Microsoft.Azure.Commands.Profile
                     azureAccount.Id = this.IsBound(nameof(AccountId)) ? AccountId : string.Format("MSI@{0}", ManagedServicePort);
                     break;
                 default:
-                    if (ParameterSetName == UserWithCredentialParameterSet && string.Equals(SessionState?.PSVariable?.GetValue("PSEdition") as string, "Core"))
-                    {
-                        throw new InvalidOperationException(Resources.PasswordNotSupported);
-                    }
+                    //if (ParameterSetName == UserWithCredentialParameterSet && string.Equals(SessionState?.PSVariable?.GetValue("PSEdition") as string, "Core"))
+                    //{
+                    //    throw new InvalidOperationException(Resources.PasswordNotSupported);
+                    //}
 
                     azureAccount.Type = AzureAccount.AccountType.User;
                     break;
@@ -315,6 +315,11 @@ namespace Microsoft.Azure.Commands.Profile
             if (UseDeviceAuthentication.IsPresent)
             {
                 azureAccount.SetProperty("UseDeviceAuth", "true");
+            }
+
+            if(azureAccount.Type == AzureAccount.AccountType.User && password != null)
+            {
+                azureAccount.SetProperty(AzureAccount.Property.UsePasswordAuth, "true");
             }
 
             if (!string.IsNullOrEmpty(ApplicationId))
@@ -526,6 +531,8 @@ namespace Microsoft.Azure.Commands.Profile
                 }
 
                 AzureSession.Instance.RegisterComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, () => factory);
+
+                AzureSession.Instance.RegisterComponent(nameof(IAzureEventListenerFactory), () => new AzureEventListenerFactory());
 #if DEBUG
             }
             catch (Exception) when (TestMockSupport.RunningMocked)
