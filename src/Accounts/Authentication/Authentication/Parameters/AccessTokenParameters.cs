@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public IAzureAccount Account { get; set; }
 
         public AccessTokenParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

@@ -22,6 +22,7 @@ using Azure.Identity;
 
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
+using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
 {
@@ -56,15 +57,19 @@ namespace Microsoft.Azure.PowerShell.Authenticators
                 var credentialKey = deviceCodeParameters.HomeAccountId;
                 if (!UserCredentialMap.TryGetValue(credentialKey, out codeCredential))
                 {
+                    AzureSession.Instance.TryGetComponent(
+                        PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                        out PowerShellTokenCacheProvider tokenCacheProvider);
                     //MsalPublicApplication 
                     DeviceCodeCredentialOptions options = new DeviceCodeCredentialOptions()
                     {
                         AuthorityHost = new Uri(authority),
                         ClientId = clientId,
                         TenantId = tenantId,
-                        EnablePersistentCache = EnablePersistenceCache,
-                        AllowUnencryptedCache = true,
-                        AuthenticationRecord = new AuthenticationRecord(
+                        CacheProvider = tokenCacheProvider,
+                        //EnablePersistentCache = EnablePersistenceCache,
+                        //AllowUnencryptedCache = true,
+                        AuthenticationRecord = IdentityModelFactory.AuthenticationRecord(
                             deviceCodeParameters.UserId,
                             authority: null,
                             homeAccountId: deviceCodeParameters.HomeAccountId,
@@ -79,13 +84,17 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             }
             else//first time login
             {
+                AzureSession.Instance.TryGetComponent(
+                    PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                    out PowerShellTokenCacheProvider tokenCacheProvider);
                 DeviceCodeCredentialOptions options = new DeviceCodeCredentialOptions()
                 {
                     AuthorityHost = new Uri(authority),
                     ClientId = clientId,
                     TenantId = tenantId,
-                    EnablePersistentCache = EnablePersistenceCache,
-                    AllowUnencryptedCache = true,
+                    CacheProvider = tokenCacheProvider,
+                    //EnablePersistentCache = EnablePersistenceCache,
+                    //AllowUnencryptedCache = true,
                 };
                 codeCredential = new DeviceCodeCredential(DeviceCodeFunc, options);
                 var authTask = codeCredential.AuthenticateAsync(requestContext, cancellationToken);

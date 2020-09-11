@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public Action<string> PromptAction { get; set; }
 
         public InteractiveParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

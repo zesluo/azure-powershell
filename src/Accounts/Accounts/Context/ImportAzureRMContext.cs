@@ -80,8 +80,8 @@ namespace Microsoft.Azure.Commands.Profile
             try
             {
                 if (AzureSession.Instance.TryGetComponent(
-                    AuthenticationClientFactory.AuthenticationClientFactoryKey,
-                    out AuthenticationClientFactory authenticationClientFactory))
+                    PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                    out PowerShellTokenCacheProvider authenticationClientFactory))
                 {
                     authenticationClientFactory.FlushTokenData();
                 }

@@ -125,43 +125,43 @@ namespace Microsoft.Azure.Commands.Common.Authentication
                 return;
             }
 
-            SharedTokenCacheClientFactory authenticationClientFactory;
-            try
-            {
-                authenticationClientFactory = new SharedTokenCacheClientFactory(new CacheMigrationSettings
-                {
-                    CacheData = adalData,
-                    CacheFormat = CacheFormat.AdalV3
-                });
-            }
-            catch (MsalCachePersistenceException)
-            {
-                throw new PlatformNotSupportedException(Resources.AutosaveNotSupportedWithSuggestion);
-            }
-            var client = authenticationClientFactory.CreatePublicClient();
+            //SharedTokenCacheClientFactory authenticationClientFactory;
+            //try
+            //{
+            //    authenticationClientFactory = new SharedTokenCacheClientFactory(new CacheMigrationSettings
+            //    {
+            //        CacheData = adalData,
+            //        CacheFormat = CacheFormat.AdalV3
+            //    });
+            //}
+            //catch (MsalCachePersistenceException)
+            //{
+            //    throw new PlatformNotSupportedException(Resources.AutosaveNotSupportedWithSuggestion);
+            //}
+            //var client = authenticationClientFactory.CreatePublicClient();
 
-            var accounts = client.GetAccountsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            foreach (var account in accounts)
-            {
-                try
-                {
-                    var accountEnvironment = string.Format("https://{0}/", account.Environment);
-                    var environment = AzureEnvironment.PublicEnvironments.Values.Where(e => e.ActiveDirectoryAuthority == accountEnvironment).FirstOrDefault();
-                    if (environment == null)
-                    {
-                        // We cannot map the previous environment to one of the public environments
-                        continue;
-                    }
+            //var accounts = client.GetAccountsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            //foreach (var account in accounts)
+            //{
+            //    try
+            //    {
+            //        var accountEnvironment = string.Format("https://{0}/", account.Environment);
+            //        var environment = AzureEnvironment.PublicEnvironments.Values.Where(e => e.ActiveDirectoryAuthority == accountEnvironment).FirstOrDefault();
+            //        if (environment == null)
+            //        {
+            //            // We cannot map the previous environment to one of the public environments
+            //            continue;
+            //        }
 
-                    var scopes = new string[] { string.Format("{0}{1}", environment.ActiveDirectoryServiceEndpointResourceId, ".default") };
-                    var token = client.AcquireTokenSilent(scopes, account).ExecuteAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                }
-                catch
-                {
-                    // Continue if we're unable to get the token for the current account
-                    continue;
-                }
-            }
+            //        var scopes = new string[] { string.Format("{0}{1}", environment.ActiveDirectoryServiceEndpointResourceId, ".default") };
+            //        var token = client.AcquireTokenSilent(scopes, account).ExecuteAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            //    }
+            //    catch
+            //    {
+            //        // Continue if we're unable to get the token for the current account
+            //        continue;
+            //    }
+            //}
 
         }
 

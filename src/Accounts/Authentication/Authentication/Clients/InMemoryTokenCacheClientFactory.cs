@@ -60,8 +60,8 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients
 
         public override byte[] ReadTokenData()
         {
-           byte[] blob;
-           lock(_lock)
+            byte[] blob;
+            lock (_lock)
             {
                 _memoryCache.TryGetValue(_cacheId, out blob);
             }
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients
 
         public override void FlushTokenData()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 _memoryCache.Set(_cacheId, _tokenCacheDataToFlush);
             }

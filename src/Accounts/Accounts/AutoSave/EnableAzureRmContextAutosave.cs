@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Commands.Profile.Context
 
         public override void ExecuteCmdlet()
         {
-            if (!SharedTokenCacheClientFactory.SupportCachePersistence(out string message))
+            if (!SharedTokenCacheProvider.SupportCachePersistence(out string message))
             {
                 throw new PlatformNotSupportedException(Resources.AutosaveNotSupported);
             }
@@ -88,9 +88,9 @@ namespace Microsoft.Azure.Commands.Profile.Context
             FileUtilities.DataStore = session.DataStore;
             session.ARMContextSaveMode = ContextSaveMode.CurrentUser;
 
-            AuthenticationClientFactory factory = new SharedTokenCacheClientFactory();
-            AzureSession.Instance.UnregisterComponent<AuthenticationClientFactory>(AuthenticationClientFactory.AuthenticationClientFactoryKey);
-            AzureSession.Instance.RegisterComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, () => factory);
+            var factory = new SharedTokenCacheProvider();
+            AzureSession.Instance.UnregisterComponent<AuthenticationClientFactory>(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey);
+            AzureSession.Instance.RegisterComponent(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey, () => factory);
             if (writeAutoSaveFile)
             {
                 try

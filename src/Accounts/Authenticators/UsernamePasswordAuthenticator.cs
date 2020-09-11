@@ -22,6 +22,7 @@ using Azure.Identity;
 
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
+using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
 using Microsoft.Azure.Commands.Common.Authentication.Properties;
 using Microsoft.WindowsAzure.Commands.Common;
 
@@ -57,12 +58,16 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             UsernamePasswordCredential passwordCredential;
             Action action = EmptyAction;
 
+            AzureSession.Instance.TryGetComponent(
+                PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                out PowerShellTokenCacheProvider provider);
             //If have both user name + password, use new Credential
             var credentialOptions = new UsernamePasswordCredentialOptions()
             {
                 AuthorityHost = new Uri(authority),
-                EnablePersistentCache = EnablePersistenceCache,
-                AllowUnencryptedCache = true
+                CacheProvider = provider
+                //EnablePersistentCache = EnablePersistenceCache,
+                //AllowUnencryptedCache = true
             };
             if (upParameters.Password != null)
             {

@@ -27,6 +27,8 @@ using Azure.Identity;
 using Hyak.Common;
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
+using Microsoft.Azure.Commands.Common.Authentication.Authentication.Clients;
+using Microsoft.WindowsAzure.Commands.Common;
 
 namespace Microsoft.Azure.PowerShell.Authenticators
 {
@@ -69,13 +71,18 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             {
                 if (!UserCredentialMap.TryGetValue(interactiveParameters.UserId, out browserCredential))
                 {
+                    AzureSession.Instance.TryGetComponent(
+                        PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                        out PowerShellTokenCacheProvider provider);
+
                     var options = new InteractiveBrowserCredentialOptions()
                     {
                         ClientId = clientId,
                         TenantId = tenantId,
-                        EnablePersistentCache = EnablePersistenceCache,
-                        AllowUnencryptedCache = true,
-                        AuthenticationRecord = new AuthenticationRecord(
+                        CacheProvider = DefaultTokenCacheProvider.WithUnencryptedFallback,
+                        //EnablePersistentCache = EnablePersistenceCache,
+                        //AllowUnencryptedCache = true,
+                        AuthenticationRecord = IdentityModelFactory.AuthenticationRecord(
                             interactiveParameters.UserId,
                             authority: null,
                             homeAccountId: interactiveParameters.HomeAccountId,
@@ -90,12 +97,16 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             }
             else//first time login
             {
+                AzureSession.Instance.TryGetComponent(
+                    PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                    out PowerShellTokenCacheProvider provider);
                 var options = new InteractiveBrowserCredentialOptions()
                 {
                     ClientId = clientId,
                     TenantId = tenantId,
-                    EnablePersistentCache = EnablePersistenceCache,
-                    AllowUnencryptedCache = true,
+                    CacheProvider = DefaultTokenCacheProvider.WithUnencryptedFallback
+                    //EnablePersistentCache = EnablePersistenceCache,
+                    //AllowUnencryptedCache = true,
                 };
                 browserCredential = new InteractiveBrowserCredential(options);
                 var authTask = browserCredential.AuthenticateAsync(cancellationToken);

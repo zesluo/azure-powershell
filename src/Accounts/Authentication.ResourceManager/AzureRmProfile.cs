@@ -689,8 +689,8 @@ namespace Microsoft.Azure.Commands.Common.Authentication.Models
         {
             // Authentication factory is already registered in `OnImport()`
             AzureSession.Instance.TryGetComponent(
-                AuthenticationClientFactory.AuthenticationClientFactoryKey,
-                out AuthenticationClientFactory authenticationClientFactory);
+                PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                out PowerShellTokenCacheProvider authenticationClientFactory);
 
             string authority = null;
             if (TryGetEnvironment(AzureSession.Instance.GetProperty(AzureSession.Property.Environment), out IAzureEnvironment sessionEnvironment))

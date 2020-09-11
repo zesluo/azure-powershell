@@ -72,8 +72,8 @@ namespace Microsoft.Azure.Commands.Profile.Context
                     client.TryRemoveContext(context);
                 }
 
-                AuthenticationClientFactory authenticationClientFactory;
-                if (!AzureSession.Instance.TryGetComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, out authenticationClientFactory))
+                PowerShellTokenCacheProvider authenticationClientFactory;
+                if (!AzureSession.Instance.TryGetComponent(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey, out authenticationClientFactory))
                 {
                     WriteWarning(Resources.ClientFactoryNotRegisteredClear);
                 }

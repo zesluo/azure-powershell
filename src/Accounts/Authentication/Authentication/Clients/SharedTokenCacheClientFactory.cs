@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
 
 
         /// <exception cref="MsalCachePersistenceException">When the operating system does not support persistence.</exception>
-        public SharedTokenCacheClientFactory() 
+        public SharedTokenCacheClientFactory()
         {
             GetCacheHelper(PowerShellClientId);
         }
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
             {
                 return _helper;
             }
-            lock(_lock)
+            lock (_lock)
             {
                 // Double check helper existence
                 if (_helper == null)

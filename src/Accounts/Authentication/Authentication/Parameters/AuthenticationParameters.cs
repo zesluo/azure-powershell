@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
 {
     public abstract class AuthenticationParameters
     {
-        public AuthenticationClientFactory AuthenticationClientFactory { get; set; }
+        public PowerShellTokenCacheProvider AuthenticationClientFactory { get; set; }
 
         public IAzureEnvironment Environment { get; set; }
 
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public string ResourceId { get; set; }
 
         public AuthenticationParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

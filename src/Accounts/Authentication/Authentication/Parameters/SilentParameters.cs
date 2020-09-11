@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public string HomeAccountId { get; set; }
 
         public SilentParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

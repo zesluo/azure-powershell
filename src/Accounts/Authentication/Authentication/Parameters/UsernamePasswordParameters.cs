@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public string HomeAccountId { get; set; }
 
         public UsernamePasswordParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

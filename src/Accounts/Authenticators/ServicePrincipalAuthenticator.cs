@@ -61,8 +61,8 @@ namespace Microsoft.Azure.PowerShell.Authenticators
             var options = new ClientCertificateCredentialOptions()
             {
                 AuthorityHost = new Uri(authority),
-                EnablePersistentCache = EnablePersistenceCache,
-                AllowUnencryptedCache = true
+                //EnablePersistentCache = EnablePersistenceCache,
+                //AllowUnencryptedCache = true
             };
 
             if (!string.IsNullOrEmpty(spParameters.Thumbprint))

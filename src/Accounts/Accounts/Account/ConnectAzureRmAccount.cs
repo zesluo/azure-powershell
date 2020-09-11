@@ -478,7 +478,7 @@ namespace Microsoft.Azure.Commands.Profile
 
                 bool shouldModifyContext = false;
                 //bool tokenFallbackAsPlainText = false;
-                if (autoSaveEnabled && !SharedTokenCacheClientFactory.SupportCachePersistence(out string message))
+                if (autoSaveEnabled && !SharedTokenCacheProvider.SupportCachePersistence(out string message))
                 {
                     // If token cache persistence is not supported, fall back to plain text persistence, and print a warning
                     // We cannot just throw an exception here because this is called when importing the module
@@ -519,18 +519,17 @@ namespace Microsoft.Azure.Commands.Profile
                     AzureSession.Instance.RegisterComponent(AuthenticatorBuilder.AuthenticatorBuilderKey, () => builder);
                 }
 
-                AuthenticationClientFactory factory = null;
+                PowerShellTokenCacheProvider provider = null;
                 if (autoSaveEnabled)
                 {
-                    factory = new SharedTokenCacheClientFactory();
+                    provider = new SharedTokenCacheProvider();
                 }
                 else // if autosave is disabled, or the shared factory fails to initialize, we fallback to in memory
                 {
-                    factory = new InMemoryTokenCacheClientFactory();
-                    
+                    provider = new InMemoryTokenCacheProvider();
                 }
 
-                AzureSession.Instance.RegisterComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, () => factory);
+                AzureSession.Instance.RegisterComponent(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey, () => provider);
 
                 AzureSession.Instance.RegisterComponent(nameof(IAzureEventListenerFactory), () => new AzureEventListenerFactory());
 #if DEBUG

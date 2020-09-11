@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         public SecureString Secret { get; set; }
 
         public ServicePrincipalParameters(
-            AuthenticationClientFactory authenticationClientFactory,
+            PowerShellTokenCacheProvider authenticationClientFactory,
             IAzureEnvironment environment,
             IAzureTokenCache tokenCache,
             string tenantId,

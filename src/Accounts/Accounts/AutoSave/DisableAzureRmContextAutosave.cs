@@ -75,17 +75,17 @@ namespace Microsoft.Azure.Commands.Profile.Context
             FileUtilities.DataStore = session.DataStore;
             session.ARMContextSaveMode = ContextSaveMode.Process;
             
-            AuthenticationClientFactory authenticationClientFactory = new InMemoryTokenCacheClientFactory();
+            var cacheProvider = new InMemoryTokenCacheProvider();
             if (AzureSession.Instance.TryGetComponent(
-                    AuthenticationClientFactory.AuthenticationClientFactoryKey,
-                    out AuthenticationClientFactory OriginalAuthenticationClientFactory))
+                    PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey,
+                    out PowerShellTokenCacheProvider originalAuthenticationClientFactory))
             {
-                var token = OriginalAuthenticationClientFactory.ReadTokenData();
-                authenticationClientFactory.UpdateTokenDataWithoutFlush(token);
-                authenticationClientFactory.FlushTokenData();
+                var token = originalAuthenticationClientFactory.ReadTokenData();
+                cacheProvider.UpdateTokenDataWithoutFlush(token);
+                cacheProvider.FlushTokenData();
             }
-            AzureSession.Instance.UnregisterComponent<AuthenticationClientFactory>(AuthenticationClientFactory.AuthenticationClientFactoryKey);
-            AzureSession.Instance.RegisterComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, () => authenticationClientFactory);
+            AzureSession.Instance.UnregisterComponent<AuthenticationClientFactory>(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey);
+            AzureSession.Instance.RegisterComponent(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey, () => cacheProvider);
             if (writeAutoSaveFile)
             {
                 FileUtilities.EnsureDirectoryExists(session.ProfileDirectory);

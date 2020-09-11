@@ -88,8 +88,8 @@ namespace Microsoft.Azure.Commands.Profile.Context
                                     if (removedContext.Account.Type == AzureAccount.AccountType.User &&
                                         !profile.Contexts.Any(c => c.Value.Account.Id == removedContext.Account.Id))
                                     {
-                                        AuthenticationClientFactory authenticationClientFactory;
-                                        if (!AzureSession.Instance.TryGetComponent(AuthenticationClientFactory.AuthenticationClientFactoryKey, out authenticationClientFactory))
+                                        PowerShellTokenCacheProvider authenticationClientFactory;
+                                        if (!AzureSession.Instance.TryGetComponent(PowerShellTokenCacheProvider.PowerShellTokenCacheProviderKey, out authenticationClientFactory))
                                         {
                                             WriteWarning(string.Format(Resources.ClientFactoryNotRegisteredRemoval, removedContext.Account.Id));
                                         }
