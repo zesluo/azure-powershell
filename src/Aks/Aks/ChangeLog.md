@@ -19,6 +19,9 @@
 -->
 ## Upcoming Release
 
+## Version 1.3.1
+* Support new Windows VHD image [#12412].
+
 ## Version 1.3.0
 * Added client side parameter validation logic for `New-AzAksCluster`, `Set-AzAksCluster` and `New-AzAksNodePool`. [#12372]
 * Added support for add-ons in `New-AzAksCluster`. [#11239]
