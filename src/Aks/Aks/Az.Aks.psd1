@@ -118,7 +118,7 @@ PrivateData = @{
         ReleaseNotes = '* Support new Windows VHD image [#12412].'
 
         # Prerelease string of this module
-        Prerelease = 'Prerelease'
+        Prerelease = 'preview'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
