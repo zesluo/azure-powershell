@@ -1287,11 +1287,11 @@
     },
     {
       "file": "src\\Synapse\\Synapse.Test\\SessionRecords\\Microsoft.Azure.Commands.Synapse.Test.ScenarioTests.VulnerabilityAssessmentTests\\TestVulnerabilityAssessmentScanConvertTest.json",
-      "_justification": "Vulnerability Assessment Scan Convert Tests"
+      "_justification": "Legitimate test session record - the resources are bing deleted after the test run in Record mode."
     },
     {
       "file": "src\\Synapse\\Synapse.Test\\SessionRecords\\Microsoft.Azure.Commands.Synapse.Test.ScenarioTests.VulnerabilityAssessmentTests\\TestVulnerabilityAssessmentScanRecordGetListTest.json",
-      "_justification": "Vulnerability Assessment Record Get List Tests"
+      "_justification": "Legitimate test session record - the resources are bing deleted after the test run in Record mode."
     },
     {
       "file": "\\src\\RedisEnterpriseCache\\test\\Get-AzRedisEnterpriseCacheDatabaseKey.Recording.json",

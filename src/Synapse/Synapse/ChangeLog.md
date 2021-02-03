@@ -18,6 +18,11 @@
         - Additional information about change #1
 -->
 ## Upcoming Release
+## Version 0.8.0
+* Added support for operation of Vulnerability Assessment Scan in SqlPool-level
+    - Add `Convert-AzSynapseSqlPoolVulnerabilityAssessmentScan` cmdlet
+    - Add `Get-AzSynapseSqlPoolVulnerabilityAssessmentScanRecord` cmdlet
+    - Add `Start-AzSynapseSqlPoolVulnerabilityAssessmentScan` cmdlet
 
 ## Version 0.7.0
 * Simplify `Restore-AzSynapseSqlPool` cmdlet to make it consistent with the existing SQL DW cmdlet
